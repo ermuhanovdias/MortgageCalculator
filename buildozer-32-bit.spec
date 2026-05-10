@@ -46,6 +46,8 @@ android.enable_androidx = True
 
 android.allow_backup = True
 
+android.permissions = INTERNET
+
 android.archs = armeabi-v7a
 
 ios.kivy_ios_url = https://github.com/kivy/kivy-ios

@@ -1,6 +1,10 @@
+import webbrowser
+
 from kivy.lang import Builder
 
 from kivymd.app import MDApp
+
+SOURCE_CODE_URL = "https://github.com/ermuhanovdias/MortgageCalculator"
 
 KV = """
 #:import dp kivy.metrics.dp
@@ -52,6 +56,13 @@ MDScreen:
                                 text: "Подсказка под полем"
                                 mode: "persistent"
 
+                        MDButton:
+                            style: "tonal"
+                            on_release: app.open_repository()
+
+                            MDButtonText:
+                                text: "Исходный код (GitHub)"
+
         MDNavigationDrawer:
             id: nav_drawer
             radius: (0, dp(16), dp(16), 0)
@@ -94,6 +105,13 @@ MDScreen:
                     MDNavigationDrawerItemText:
                         text: "Графики и диаграммы"
 
+                MDNavigationDrawerItem:
+                    on_release: app.open_repository()
+                    MDNavigationDrawerItemLeadingIcon:
+                        icon: "github"
+                    MDNavigationDrawerItemText:
+                        text: "Исходный код"
+
                 MDNavigationDrawerDivider:
 
                 MDNavigationDrawerLabel:
@@ -112,6 +130,9 @@ class MortgageCalculatorApp(MDApp):
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "Orange"
         return Builder.load_string(KV)
+
+    def open_repository(self, *args) -> None:
+        webbrowser.open(SOURCE_CODE_URL)
 
 
 MortgageCalculatorApp().run()
