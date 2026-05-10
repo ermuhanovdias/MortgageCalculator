@@ -98,7 +98,7 @@ MDScreen:
                             id: label_payment
                             text: "Ежемесячный платёж: —"
                             adaptive_height: True
-                            padding_y: "8dp"
+                            padding: 0, "8dp", 0, 0
                             role: "medium"
                             font_style: "Title"
 
@@ -123,14 +123,14 @@ MDScreen:
                     MDLabel:
                         text: "Калькулятор ипотеки"
                         adaptive_height: True
-                        padding_x: "16dp"
+                        padding: "16dp", 0, "16dp", 0
                         font_style: "Display"
                         role: "small"
 
                     MDLabel:
                         text: "Меню"
                         adaptive_height: True
-                        padding_x: "18dp"
+                        padding: "18dp", 0, "18dp", 0
                         font_style: "Title"
                         role: "large"
 
@@ -194,56 +194,57 @@ class MortgageCalculatorApp(MDApp):
         self._loan = 1_000_000.0
         self._months = 120
         self._rate = 12.0
-        root = Builder.load_string(KV)
+        # self.root is not set until after build() returns; use _ui for ids access.
+        self._ui = Builder.load_string(KV)
         self._prime_fields_from_state()
         self._update_payment_label()
-        return root
+        return self._ui
 
     def open_source_repository(self, *args: Any) -> None:
         webbrowser.open(SOURCE_CODE_URL)
 
     def on_loan_focus_out(self) -> None:
-        raw = _parse_positive_float(self.root.ids.field_loan.text)
+        raw = _parse_positive_float(self._ui.ids.field_loan.text)
         if raw < 1.0:
             raw = 100.0
         self._loan = raw
-        self.root.ids.field_loan.text = str(int(self._loan))
+        self._ui.ids.field_loan.text = str(int(self._loan))
         self._update_payment_label()
 
     def on_months_focus_out(self) -> None:
-        raw = _parse_positive_float(self.root.ids.field_months.text)
+        raw = _parse_positive_float(self._ui.ids.field_months.text)
         months = int(round(raw))
         if months < 1:
             months = 1
         self._months = months
-        self.root.ids.field_months.text = str(self._months)
+        self._ui.ids.field_months.text = str(self._months)
         self._update_payment_label()
 
     def on_rate_focus_out(self) -> None:
-        raw = _parse_positive_float(self.root.ids.field_rate.text)
+        raw = _parse_positive_float(self._ui.ids.field_rate.text)
         if raw < 1.0:
             raw = 1.0
         self._rate = raw
         # Show without trailing .0 when integer
-        self.root.ids.field_rate.text = (
+        self._ui.ids.field_rate.text = (
             str(int(self._rate)) if self._rate == int(self._rate) else str(self._rate)
         )
         self._update_payment_label()
 
     def _prime_fields_from_state(self) -> None:
-        self.root.ids.field_loan.text = str(int(self._loan))
-        self.root.ids.field_months.text = str(self._months)
-        self.root.ids.field_rate.text = (
+        self._ui.ids.field_loan.text = str(int(self._loan))
+        self._ui.ids.field_months.text = str(self._months)
+        self._ui.ids.field_rate.text = (
             str(int(self._rate)) if self._rate == int(self._rate) else str(self._rate)
         )
 
     def _update_payment_label(self) -> None:
         pay = monthly_annuity_payment(self._loan, self._rate, self._months)
         if pay <= 0:
-            self.root.ids.label_payment.text = "Ежемесячный платёж: —"
+            self._ui.ids.label_payment.text = "Ежемесячный платёж: —"
             return
         rounded = round(pay, 2)
-        self.root.ids.label_payment.text = f"Ежемесячный платёж: {rounded:.2f} руб."
+        self._ui.ids.label_payment.text = f"Ежемесячный платёж: {rounded:.2f} руб."
 
 
 MortgageCalculatorApp().run()
