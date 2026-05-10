@@ -14,18 +14,8 @@ MDScreen:
 
     MDNavigationLayout:
 
-        MDTopAppBar:
-            type: "small"
-            pos_hint: {"top": 1}
-
-            MDTopAppBarLeadingButtonContainer:
-
-                MDActionTopAppBarButton:
-                    icon: "menu"
-                    on_release: nav_drawer.set_state("toggle")
-
-            MDTopAppBarTitle:
-                text: "Калькулятор ипотеки"
+        # Order matters: TopAppBar must be last so the menu button receives touches
+        # (drawer/s scrim must not sit above the bar).
 
         MDScreenManager:
 
@@ -56,15 +46,9 @@ MDScreen:
                                 text: "Подсказка под полем"
                                 mode: "persistent"
 
-                        MDButton:
-                            style: "tonal"
-                            on_release: app.open_repository()
-
-                            MDButtonText:
-                                text: "Исходный код (GitHub)"
-
         MDNavigationDrawer:
             id: nav_drawer
+            drawer_type: "modal"
             radius: (0, dp(16), dp(16), 0)
 
             MDNavigationDrawerMenu:
@@ -122,6 +106,19 @@ MDScreen:
                         icon: "information-outline"
                     MDNavigationDrawerItemText:
                         text: "О приложении"
+
+        MDTopAppBar:
+            type: "small"
+            pos_hint: {"top": 1}
+
+            MDTopAppBarLeadingButtonContainer:
+
+                MDActionTopAppBarButton:
+                    icon: "menu"
+                    on_release: root.ids.nav_drawer.set_state("toggle")
+
+            MDTopAppBarTitle:
+                text: "Калькулятор ипотеки"
 """
 
 
@@ -132,6 +129,9 @@ class MortgageCalculatorApp(MDApp):
         return Builder.load_string(KV)
 
     def open_repository(self, *args) -> None:
+        drawer = self.root.ids.get("nav_drawer")
+        if drawer is not None:
+            drawer.set_state("close")
         webbrowser.open(SOURCE_CODE_URL)
 
 
