@@ -12,7 +12,7 @@ class MainApp(MDApp):
             MDScreen(
                 MDButton(
                     MDButtonText(
-                        text="Hello, World",
+                        text="Привет, калькулятор ипотеки",
                     ),
                     pos_hint={"center_x": 0.5, "center_y": 0.5},
                 )

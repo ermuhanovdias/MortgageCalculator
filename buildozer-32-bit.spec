@@ -1,4 +1,5 @@
 # Buildozer spec: Android 32-bit (armeabi-v7a). For 64-bit use buildozer-64-bit.spec (arm64-v8a).
+# CI copies this file to buildozer.spec before the first build, then wipes .buildozer before 64-bit.
 
 [app]
 
@@ -14,7 +15,7 @@ source.include_exts = py,png,jpg,kv,atlas,json
 
 source.include_patterns = data/*
 
-version = 0.1
+version = 0.2
 
 requirements = python3,kivy,kivymd,pillow
 
