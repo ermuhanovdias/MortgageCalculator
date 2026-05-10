@@ -1,0 +1,57 @@
+# Travis CI: Build Android debug APK with Buildozer and upload to GitHub Releases.
+#
+# Setup:
+# 1) Enable the repo on https://www.travis-ci.com (or legacy travis-ci.org if applicable).
+# 2) Travis → Settings → Environment variables → add GITHUB_TOKEN (fine-grained or classic
+#    PAT with permission to create releases on this repository).
+# 3) Push to master or main; debug APK is produced via buildozer-32-bit.spec (armeabi-v7a).
+
+language: python
+os: linux
+dist: jammy
+python:
+  - "3.10"
+
+addons:
+  apt:
+    update: true
+    packages:
+      - openjdk-17-jdk
+      - git
+      - zip
+      - unzip
+      - autoconf
+      - libtool
+      - pkg-config
+      - zlib1g-dev
+      - libncurses-dev
+      - cmake
+      - libffi-dev
+      - libssl-dev
+      - automake
+      - libltdl-dev
+      - patch
+      - libc6-dev
+
+install:
+  - pip install --upgrade pip
+  - pip install buildozer cython
+
+script:
+  - buildozer --version
+  - travis_wait 120 buildozer -f buildozer-32-bit.spec android debug
+
+before_deploy:
+  - ls -la bin/
+
+deploy:
+  provider: releases
+  token: $GITHUB_TOKEN
+  file_glob: true
+  file:
+    - bin/*.apk
+  skip_cleanup: true
+  on:
+    branch:
+      - master
+      - main
