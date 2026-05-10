@@ -14,7 +14,7 @@ source.include_exts = py,png,jpg,kv,atlas,json
 
 source.include_patterns = data/*
 
-version = 0.3
+version = 0.5
 
 requirements = python3,kivy,kivymd,pillow
 
@@ -41,6 +41,8 @@ android.ndk = 25b
 android.enable_androidx = True
 
 android.allow_backup = True
+
+android.permissions = INTERNET
 
 android.archs = arm64-v8a
 
