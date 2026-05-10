@@ -1,10 +1,33 @@
 import webbrowser
 
 from kivy.lang import Builder
+from kivy.metrics import dp
 
 from kivymd.app import MDApp
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.label import MDLabel
+from kivymd.uix.scrollview import MDScrollView
+from kivymd.uix.tab import (
+    MDTabsCarousel,
+    MDTabsItem,
+    MDTabsItemIcon,
+    MDTabsItemText,
+    MDTabsPrimary,
+)
+from kivymd.uix.textfield import (
+    MDTextField,
+    MDTextFieldHelperText,
+    MDTextFieldHintText,
+)
 
 SOURCE_CODE_URL = "https://github.com/ermuhanovdias/MortgageCalculator"
+
+# Icons and titles for horizontal tabs (mortgage app sections).
+TAB_ITEMS = (
+    ("calculator", "Ипотека"),
+    ("chart-line", "Графики"),
+    ("information-outline", "Инфо"),
+)
 
 KV = """
 #:import dp kivy.metrics.dp
@@ -14,37 +37,27 @@ MDScreen:
 
     MDNavigationLayout:
 
-        # Order matters: TopAppBar must be last so the menu button receives touches
-        # (drawer/s scrim must not sit above the bar).
-
         MDScreenManager:
 
             MDScreen:
                 name: "main"
 
-                MDScrollView:
+                MDBoxLayout:
+                    orientation: "vertical"
+                    padding: 0, "72dp", 0, 0
+                    spacing: "8dp"
 
-                    MDBoxLayout:
-                        orientation: "vertical"
-                        adaptive_height: True
-                        # Reserve space under floating top bar (avoids title overlap with content)
-                        padding: "16dp", "72dp", "16dp", "16dp"
-                        spacing: "16dp"
+                    MDTabsPrimary:
+                        id: main_tabs
+                        size_hint_y: None
+                        height: dp(48) + dp(320)
 
-                        MDLabel:
-                            text: "Привет, калькулятор ипотеки"
-                            halign: "center"
-                            adaptive_height: True
+                        MDDivider:
 
-                        MDTextField:
-                            mode: "filled"
-
-                            MDTextFieldHintText:
-                                text: "Пример текстового поля"
-
-                            MDTextFieldHelperText:
-                                text: "Подсказка под полем"
-                                mode: "persistent"
+                        MDTabsCarousel:
+                            id: tab_carousel
+                            size_hint_y: None
+                            height: dp(320)
 
         MDNavigationDrawer:
             id: nav_drawer
@@ -122,11 +135,77 @@ MDScreen:
 """
 
 
+def _build_mortgage_tab_content() -> MDScrollView:
+    """First tab: same demo content as before (greeting + sample field)."""
+    box = MDBoxLayout(
+        orientation="vertical",
+        adaptive_height=True,
+        padding=dp(16),
+        spacing=dp(16),
+    )
+    box.add_widget(
+        MDLabel(
+            text="Привет, калькулятор ипотеки",
+            halign="center",
+            adaptive_height=True,
+        )
+    )
+    field = MDTextField(
+        mode="filled",
+    )
+    field.add_widget(MDTextFieldHintText(text="Пример текстового поля"))
+    field.add_widget(
+        MDTextFieldHelperText(
+            text="Подсказка под полем",
+            mode="persistent",
+        )
+    )
+    box.add_widget(field)
+    scroll = MDScrollView()
+    scroll.add_widget(box)
+    return scroll
+
+
 class MortgageCalculatorApp(MDApp):
     def build(self):
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "Orange"
         return Builder.load_string(KV)
+
+    def on_start(self) -> None:
+        tabs: MDTabsPrimary = self.root.ids.main_tabs
+        carousel: MDTabsCarousel = self.root.ids.tab_carousel
+
+        for index, (icon, title) in enumerate(TAB_ITEMS):
+            tabs.add_widget(
+                MDTabsItem(
+                    MDTabsItemIcon(icon=icon),
+                    MDTabsItemText(text=title),
+                )
+            )
+            if index == 0:
+                carousel.add_widget(_build_mortgage_tab_content())
+            elif index == 1:
+                carousel.add_widget(
+                    MDLabel(
+                        text="Раздел «Графики» — контент позже.",
+                        halign="center",
+                        valign="middle",
+                        size_hint=(1, 1),
+                    )
+                )
+            else:
+                carousel.add_widget(
+                    MDLabel(
+                        text="Раздел «Инфо» — кратко о приложении.\n"
+                        "Исходный код: меню слева → «Исходный код».",
+                        halign="center",
+                        valign="middle",
+                        size_hint=(1, 1),
+                    )
+                )
+
+        tabs.switch_tab(icon=TAB_ITEMS[0][0])
 
     def open_repository(self, *args) -> None:
         drawer = self.root.ids.get("nav_drawer")
