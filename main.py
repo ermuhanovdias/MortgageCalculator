@@ -44,20 +44,20 @@ MDScreen:
 
                 MDBoxLayout:
                     orientation: "vertical"
-                    padding: 0, "72dp", 0, 0
-                    spacing: "8dp"
+                    # Toolbar is MDTopAppBar (~56dp small); tabs sit flush below it like Material layout
+                    padding: 0, dp(56), 0, 0
+                    spacing: 0
 
                     MDTabsPrimary:
                         id: main_tabs
-                        size_hint_y: None
-                        height: dp(48) + dp(320)
+                        size_hint_y: 1
+                        indicator_anim: False
 
                         MDDivider:
 
                         MDTabsCarousel:
                             id: tab_carousel
-                            size_hint_y: None
-                            height: dp(320)
+                            size_hint_y: 1
 
         MDNavigationDrawer:
             id: nav_drawer
@@ -121,6 +121,7 @@ MDScreen:
                         text: "О приложении"
 
         MDTopAppBar:
+            id: top_bar
             type: "small"
             pos_hint: {"top": 1}
 
@@ -132,6 +133,11 @@ MDScreen:
 
             MDTopAppBarTitle:
                 text: "Калькулятор ипотеки"
+
+            MDTopAppBarTrailingButtonContainer:
+                MDActionTopAppBarButton:
+                    icon: "star"
+                    on_release: app.open_repository()
 """
 
 
@@ -168,13 +174,41 @@ def _build_mortgage_tab_content() -> MDScrollView:
 
 class MortgageCalculatorApp(MDApp):
     def build(self):
-        self.theme_cls.theme_style = "Dark"
+        # Reference UI: dark top bar + tabs, but white content area.
+        # We use Light theme as a base so the content renders on a light surface.
+        self.theme_cls.theme_style = "Light"
         self.theme_cls.primary_palette = "Orange"
         return Builder.load_string(KV)
+
+    def _on_tabs_switch(self, tabs: MDTabsPrimary, tab_item, tab_content) -> None:
+        """Triggered every time the current tab is changed."""
+        tab_title = None
+        try:
+            if tab_item is not None and hasattr(tab_item, "walk"):
+                for w in tab_item.walk():
+                    if isinstance(w, MDTabsItemText):
+                        tab_title = w.text
+                        break
+        except Exception:
+            tab_title = None
+
+        # Keep logs in English (required).
+        print(f"Tab switched: {tab_title}")
 
     def on_start(self) -> None:
         tabs: MDTabsPrimary = self.root.ids.main_tabs
         carousel: MDTabsCarousel = self.root.ids.tab_carousel
+        top_bar = self.root.ids.top_bar
+
+        tabs.bind(on_tab_switch=self._on_tabs_switch)
+
+        # Dark app bar + dark tab strip (indicator still uses primary palette).
+        dark_bg = getattr(self.theme_cls, "bg_dark", "#000000")
+        tabs.md_bg_color = dark_bg
+        top_bar.md_bg_color = dark_bg
+
+        # Content area below tabs.
+        carousel.md_bg_color = "#FFFFFF"
 
         for index, (icon, title) in enumerate(TAB_ITEMS):
             tabs.add_widget(
