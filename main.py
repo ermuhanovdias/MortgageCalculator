@@ -1,8 +1,10 @@
 import webbrowser
 
+from kivy.clock import Clock
 from kivy.lang import Builder
 
 from kivymd.app import MDApp
+from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.tab import MDTabsItemText, MDTabsPrimary
 
 SOURCE_CODE_URL = "https://github.com/ermuhanovdias/MortgageCalculator"
@@ -133,12 +135,14 @@ MDScreen:
                                                 text: "Ставка, % годовых"
 
                                         MDTextField:
+                                            id: field_payment_type
                                             mode: "filled"
                                             size_hint_x: 0.5
                                             size_hint_y: None
                                             height: self.minimum_height
                                             MDTextFieldHintText:
                                                 text: "Тип платежа"
+                                            on_focus: if self.focus: app.open_payment_type_menu()
 
                             MDBoxLayout:
                                 orientation: "vertical"
@@ -243,6 +247,8 @@ MDScreen:
 
 
 class MortgageCalculatorApp(MDApp):
+    payment_type_menu: MDDropdownMenu | None = None
+
     def build(self):
         # Reference UI: dark top bar + tabs, but white content area.
         # We use Light theme as a base so the content renders on a light surface.
@@ -282,11 +288,58 @@ class MortgageCalculatorApp(MDApp):
 
         tabs.switch_tab(icon="calculator")
 
+        self._setup_payment_type_dropdown()
+
+    def _setup_payment_type_dropdown(self) -> None:
+        """Bind MDDropdownMenu to payment type field (lesson: annuity vs differentiated)."""
+        field = self.root.ids.field_payment_type
+        menu_items = [
+            {
+                "text": "Аннуитетный",
+                "leading_icon": "chart-timeline-variant",
+                "on_release": lambda *a, t="Аннуитетный": self._on_payment_type_chosen(t),
+            },
+            {
+                "text": "Дифференцированный",
+                "leading_icon": "chart-line-variant",
+                "on_release": lambda *a, t="Дифференцированный": self._on_payment_type_chosen(t),
+            },
+        ]
+        self.payment_type_menu = MDDropdownMenu(
+            caller=field,
+            items=menu_items,
+            position="bottom",
+            width_mult=5,
+        )
+
+    def open_payment_type_menu(self, *args) -> None:
+        """KV calls this when the payment type field gains focus."""
+        if self.payment_type_menu:
+            self.payment_type_menu.open()
+
+    def _on_payment_type_chosen(self, label: str) -> None:
+        """Write selected menu text into the field and close menu (lesson pattern)."""
+        if self.payment_type_menu:
+            self.payment_type_menu.dismiss()
+
+        def apply_choice(_dt):
+            field = self.root.ids.field_payment_type
+            field.text = label
+            field.focus = False
+
+        # Small delay so dismiss finishes before updating text (similar to lesson Clock.schedule_once).
+        Clock.schedule_once(apply_choice, 0.05)
+
     def open_repository(self, *args) -> None:
         drawer = self.root.ids.get("nav_drawer")
         if drawer is not None:
             drawer.set_state("close")
         webbrowser.open(SOURCE_CODE_URL)
 
-    
+
+# If dropdown menus misbehave on some KivyMD builds, pin a known-good version, e.g.:
+#   pip install "kivy>=2.3,<3" "kivymd>=2.0.0" --upgrade
+# On Android, soft keyboard + overlays sometimes need: Window.softinput_mode (see Kivy docs).
+
+
 MortgageCalculatorApp().run()
