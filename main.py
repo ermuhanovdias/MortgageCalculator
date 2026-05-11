@@ -63,8 +63,8 @@ MDScreen:
 
                                 MDBoxLayout:
                                     orientation: "vertical"
-                                    spacing: dp(12)
-                                    padding: dp(16)
+                                    spacing: dp(8)
+                                    padding: dp(16), dp(16), dp(16), dp(24)
                                     size_hint_y: None
                                     height: self.minimum_height
 
@@ -76,7 +76,7 @@ MDScreen:
                                     MDTextField:
                                         mode: "filled"
                                         size_hint_y: None
-                                        height: dp(96)
+                                        height: self.minimum_height
                                         input_filter: "float"
                                         MDTextFieldLeadingIcon:
                                             icon: "home-variant-outline"
@@ -89,7 +89,7 @@ MDScreen:
                                     MDTextField:
                                         mode: "filled"
                                         size_hint_y: None
-                                        height: dp(96)
+                                        height: self.minimum_height
                                         input_filter: "int"
                                         MDTextFieldLeadingIcon:
                                             icon: "calendar"
@@ -102,60 +102,60 @@ MDScreen:
                                     MDTextField:
                                         mode: "filled"
                                         size_hint_y: None
-                                        height: dp(96)
+                                        height: self.minimum_height
                                         input_filter: "float"
                                         MDTextFieldLeadingIcon:
                                             icon: "cash"
                                         MDTextFieldHintText:
                                             text: "Сумма кредита, ₽"
                                         MDTextFieldHelperText:
-                                            text: "Обычно цена минус первоначальный взнос"
+                                            text: "Цена минус взнос"
                                             mode: "persistent"
 
                                     MDBoxLayout:
                                         orientation: "horizontal"
                                         spacing: dp(8)
                                         size_hint_y: None
-                                        height: dp(96)
+                                        height: self.minimum_height
 
                                         MDTextField:
                                             mode: "filled"
                                             size_hint_x: 0.42
                                             size_hint_y: None
-                                            height: dp(96)
+                                            height: self.minimum_height
                                             input_filter: "float"
                                             MDTextFieldLeadingIcon:
                                                 icon: "bank"
                                             MDTextFieldHintText:
                                                 text: "Ставка, % годовых"
                                             MDTextFieldHelperText:
-                                                text: "Годовых, в процентах"
+                                                text: "Годовых, %"
                                                 mode: "persistent"
 
                                         MDTextField:
                                             mode: "filled"
                                             size_hint_x: 0.58
                                             size_hint_y: None
-                                            height: dp(96)
+                                            height: self.minimum_height
                                             input_filter: "float"
                                             MDTextFieldLeadingIcon:
                                                 icon: "wallet-outline"
                                             MDTextFieldHintText:
                                                 text: "Первоначальный взнос, ₽"
                                             MDTextFieldHelperText:
-                                                text: "Сумма взноса при оформлении"
+                                                text: "При оформлении"
                                                 mode: "persistent"
 
                                     MDTextField:
                                         mode: "filled"
                                         size_hint_y: None
-                                        height: dp(96)
+                                        height: self.minimum_height
                                         MDTextFieldLeadingIcon:
                                             icon: "credit-card-outline"
                                         MDTextFieldHintText:
                                             text: "Тип платежа"
                                         MDTextFieldHelperText:
-                                            text: "Аннуитет или дифференцированный график"
+                                            text: "Аннуитет или дифференцированный"
                                             mode: "persistent"
 
                             MDBoxLayout:
