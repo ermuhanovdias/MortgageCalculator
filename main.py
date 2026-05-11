@@ -1,35 +1,15 @@
 import webbrowser
 
 from kivy.lang import Builder
-from kivy.metrics import dp
 
 from kivymd.app import MDApp
-from kivymd.uix.boxlayout import MDBoxLayout
-from kivymd.uix.label import MDLabel
-from kivymd.uix.scrollview import MDScrollView
-from kivymd.uix.tab import (
-    MDTabsCarousel,
-    MDTabsItem,
-    MDTabsItemIcon,
-    MDTabsItemText,
-    MDTabsPrimary,
-)
-from kivymd.uix.textfield import (
-    MDTextField,
-    MDTextFieldHelperText,
-    MDTextFieldHintText,
-)
+from kivymd.uix.tab import MDTabsItemText, MDTabsPrimary
 
 SOURCE_CODE_URL = "https://github.com/ermuhanovdias/MortgageCalculator"
 
-# Icons and titles for horizontal tabs (mortgage app sections).
-TAB_ITEMS = (
-    ("calculator", "Ипотека"),
-    ("chart-line", "Графики"),
-    ("information-outline", "Инфо"),
-)
-
+# Tabs + first-tab form live in KV below (lesson: declarative UI, no programmatic tab loop).
 KV = """
+#:import Clock kivy.clock.Clock
 #:import dp kivy.metrics.dp
 
 MDScreen:
@@ -53,11 +33,150 @@ MDScreen:
                         size_hint_y: 1
                         indicator_anim: False
 
+                        MDTabsItem:
+                            MDTabsItemIcon:
+                                icon: "calculator"
+                            MDTabsItemText:
+                                text: "Ипотека"
+
+                        MDTabsItem:
+                            MDTabsItemIcon:
+                                icon: "chart-line"
+                            MDTabsItemText:
+                                text: "Графики"
+
+                        MDTabsItem:
+                            MDTabsItemIcon:
+                                icon: "information-outline"
+                            MDTabsItemText:
+                                text: "Инфо"
+
                         MDDivider:
 
                         MDTabsCarousel:
                             id: tab_carousel
                             size_hint_y: 1
+
+                            MDScrollView:
+                                do_scroll_x: False
+                                size_hint: 1, 1
+
+                                MDBoxLayout:
+                                    orientation: "vertical"
+                                    spacing: dp(12)
+                                    padding: dp(16)
+                                    size_hint_y: None
+                                    height: self.minimum_height
+
+                                    MDLabel:
+                                        text: "Параметры кредита"
+                                        adaptive_height: True
+                                        bold: True
+
+                                    MDBoxLayout:
+                                        orientation: "horizontal"
+                                        spacing: dp(8)
+                                        size_hint_y: None
+                                        height: dp(72)
+
+                                        MDIconButton:
+                                            icon: "home-variant-outline"
+                                            pos_hint: {"center_y": .5}
+
+                                        MDTextField:
+                                            mode: "filled"
+                                            size_hint_x: 1
+                                            hint_text: "Стоимость недвижимости, ₽"
+                                            input_filter: "float"
+
+                                    MDBoxLayout:
+                                        orientation: "horizontal"
+                                        spacing: dp(8)
+                                        size_hint_y: None
+                                        height: dp(72)
+
+                                        MDIconButton:
+                                            icon: "calendar"
+                                            pos_hint: {"center_y": .5}
+
+                                        MDTextField:
+                                            mode: "filled"
+                                            size_hint_x: 1
+                                            hint_text: "Срок кредита, лет"
+                                            input_filter: "int"
+
+                                    MDBoxLayout:
+                                        orientation: "horizontal"
+                                        spacing: dp(8)
+                                        size_hint_y: None
+                                        height: dp(72)
+
+                                        MDIconButton:
+                                            icon: "cash"
+                                            pos_hint: {"center_y": .5}
+
+                                        MDTextField:
+                                            mode: "filled"
+                                            size_hint_x: 1
+                                            hint_text: "Сумма кредита, ₽"
+                                            input_filter: "float"
+
+                                    MDBoxLayout:
+                                        orientation: "horizontal"
+                                        spacing: dp(8)
+                                        size_hint_y: None
+                                        height: dp(72)
+
+                                        MDIconButton:
+                                            icon: "bank"
+                                            pos_hint: {"center_y": .5}
+
+                                        MDTextField:
+                                            mode: "filled"
+                                            size_hint_x: 0.42
+                                            hint_text: "Ставка, % годовых"
+                                            input_filter: "float"
+
+                                        MDTextField:
+                                            mode: "filled"
+                                            size_hint_x: 0.58
+                                            hint_text: "Первоначальный взнос, ₽"
+                                            input_filter: "float"
+
+                                    MDBoxLayout:
+                                        orientation: "horizontal"
+                                        spacing: dp(8)
+                                        size_hint_y: None
+                                        height: dp(72)
+
+                                        MDIconButton:
+                                            icon: "credit-card-outline"
+                                            pos_hint: {"center_y": .5}
+
+                                        MDTextField:
+                                            mode: "filled"
+                                            size_hint_x: 1
+                                            hint_text: "Тип платежа (аннуитет / дифференцированный)"
+
+                            MDBoxLayout:
+                                orientation: "vertical"
+                                size_hint: 1, 1
+
+                                MDLabel:
+                                    text: "Раздел «Графики» — контент позже."
+                                    halign: "center"
+                                    valign: "middle"
+                                    size_hint: 1, 1
+
+                            MDBoxLayout:
+                                orientation: "vertical"
+                                size_hint: 1, 1
+
+                                MDLabel:
+                                    text: "Раздел «Инфо» — кратко о приложении. Исходный код: меню слева → «Исходный код»."
+                                    halign: "center"
+                                    valign: "middle"
+                                    size_hint: 1, 1
 
         MDNavigationDrawer:
             id: nav_drawer
@@ -141,37 +260,6 @@ MDScreen:
 """
 
 
-def _build_mortgage_tab_content() -> MDScrollView:
-    """First tab: same demo content as before (greeting + sample field)."""
-    box = MDBoxLayout(
-        orientation="vertical",
-        adaptive_height=True,
-        padding=dp(16),
-        spacing=dp(16),
-    )
-    box.add_widget(
-        MDLabel(
-            text="Привет, калькулятор ипотеки",
-            halign="center",
-            adaptive_height=True,
-        )
-    )
-    field = MDTextField(
-        mode="filled",
-    )
-    field.add_widget(MDTextFieldHintText(text="Пример текстового поля"))
-    field.add_widget(
-        MDTextFieldHelperText(
-            text="Подсказка под полем",
-            mode="persistent",
-        )
-    )
-    box.add_widget(field)
-    scroll = MDScrollView()
-    scroll.add_widget(box)
-    return scroll
-
-
 class MortgageCalculatorApp(MDApp):
     def build(self):
         # Reference UI: dark top bar + tabs, but white content area.
@@ -197,7 +285,7 @@ class MortgageCalculatorApp(MDApp):
 
     def on_start(self) -> None:
         tabs: MDTabsPrimary = self.root.ids.main_tabs
-        carousel: MDTabsCarousel = self.root.ids.tab_carousel
+        carousel = self.root.ids.tab_carousel
         top_bar = self.root.ids.top_bar
 
         tabs.bind(on_tab_switch=self._on_tabs_switch)
@@ -210,36 +298,7 @@ class MortgageCalculatorApp(MDApp):
         # Content area below tabs.
         carousel.md_bg_color = "#FFFFFF"
 
-        for index, (icon, title) in enumerate(TAB_ITEMS):
-            tabs.add_widget(
-                MDTabsItem(
-                    MDTabsItemIcon(icon=icon),
-                    MDTabsItemText(text=title),
-                )
-            )
-            if index == 0:
-                carousel.add_widget(_build_mortgage_tab_content())
-            elif index == 1:
-                carousel.add_widget(
-                    MDLabel(
-                        text="Раздел «Графики» — контент позже.",
-                        halign="center",
-                        valign="middle",
-                        size_hint=(1, 1),
-                    )
-                )
-            else:
-                carousel.add_widget(
-                    MDLabel(
-                        text="Раздел «Инфо» — кратко о приложении.\n"
-                        "Исходный код: меню слева → «Исходный код».",
-                        halign="center",
-                        valign="middle",
-                        size_hint=(1, 1),
-                    )
-                )
-
-        tabs.switch_tab(icon=TAB_ITEMS[0][0])
+        tabs.switch_tab(icon="calculator")
 
     def open_repository(self, *args) -> None:
         drawer = self.root.ids.get("nav_drawer")

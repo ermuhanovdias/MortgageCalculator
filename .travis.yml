@@ -62,7 +62,7 @@ script:
 before_deploy:
   - ls -la release-apks/
 
-# Buildozer [app] version (APK name suffix): 0.5 — bump together with buildozer-32-bit.spec / buildozer-64-bit.spec
+# Buildozer [app] version (APK name suffix): 0.6 — bump together with buildozer-32-bit.spec / buildozer-64-bit.spec
 deploy:
   provider: releases
   token: $GITHUB_TOKEN
