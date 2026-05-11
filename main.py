@@ -140,9 +140,9 @@ MDScreen:
                                             size_hint_x: 0.5
                                             size_hint_y: None
                                             height: self.minimum_height
+                                            on_focus: if self.focus: app.open_payment_type_menu()
                                             MDTextFieldHintText:
                                                 text: "Тип платежа"
-                                            on_focus: if self.focus: app.open_payment_type_menu()
 
                             MDBoxLayout:
                                 orientation: "vertical"
