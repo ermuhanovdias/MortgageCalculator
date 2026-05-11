@@ -73,90 +73,90 @@ MDScreen:
                                         adaptive_height: True
                                         bold: True
 
-                                    MDBoxLayout:
-                                        orientation: "horizontal"
-                                        spacing: dp(8)
+                                    MDTextField:
+                                        mode: "filled"
                                         size_hint_y: None
-                                        height: dp(72)
-
-                                        MDIconButton:
+                                        height: dp(96)
+                                        input_filter: "float"
+                                        MDTextFieldLeadingIcon:
                                             icon: "home-variant-outline"
-                                            pos_hint: {"center_y": .5}
+                                        MDTextFieldHintText:
+                                            text: "Стоимость недвижимости, ₽"
+                                        MDTextFieldHelperText:
+                                            text: "Оценочная или договорная цена объекта"
+                                            mode: "persistent"
 
-                                        MDTextField:
-                                            mode: "filled"
-                                            size_hint_x: 1
-                                            hint_text: "Стоимость недвижимости, ₽"
-                                            input_filter: "float"
-
-                                    MDBoxLayout:
-                                        orientation: "horizontal"
-                                        spacing: dp(8)
+                                    MDTextField:
+                                        mode: "filled"
                                         size_hint_y: None
-                                        height: dp(72)
-
-                                        MDIconButton:
+                                        height: dp(96)
+                                        input_filter: "int"
+                                        MDTextFieldLeadingIcon:
                                             icon: "calendar"
-                                            pos_hint: {"center_y": .5}
+                                        MDTextFieldHintText:
+                                            text: "Срок кредита, лет"
+                                        MDTextFieldHelperText:
+                                            text: "Полных лет (например, 20)"
+                                            mode: "persistent"
 
-                                        MDTextField:
-                                            mode: "filled"
-                                            size_hint_x: 1
-                                            hint_text: "Срок кредита, лет"
-                                            input_filter: "int"
-
-                                    MDBoxLayout:
-                                        orientation: "horizontal"
-                                        spacing: dp(8)
+                                    MDTextField:
+                                        mode: "filled"
                                         size_hint_y: None
-                                        height: dp(72)
-
-                                        MDIconButton:
+                                        height: dp(96)
+                                        input_filter: "float"
+                                        MDTextFieldLeadingIcon:
                                             icon: "cash"
-                                            pos_hint: {"center_y": .5}
-
-                                        MDTextField:
-                                            mode: "filled"
-                                            size_hint_x: 1
-                                            hint_text: "Сумма кредита, ₽"
-                                            input_filter: "float"
+                                        MDTextFieldHintText:
+                                            text: "Сумма кредита, ₽"
+                                        MDTextFieldHelperText:
+                                            text: "Обычно цена минус первоначальный взнос"
+                                            mode: "persistent"
 
                                     MDBoxLayout:
                                         orientation: "horizontal"
                                         spacing: dp(8)
                                         size_hint_y: None
-                                        height: dp(72)
-
-                                        MDIconButton:
-                                            icon: "bank"
-                                            pos_hint: {"center_y": .5}
+                                        height: dp(96)
 
                                         MDTextField:
                                             mode: "filled"
                                             size_hint_x: 0.42
-                                            hint_text: "Ставка, % годовых"
+                                            size_hint_y: None
+                                            height: dp(96)
                                             input_filter: "float"
+                                            MDTextFieldLeadingIcon:
+                                                icon: "bank"
+                                            MDTextFieldHintText:
+                                                text: "Ставка, % годовых"
+                                            MDTextFieldHelperText:
+                                                text: "Годовых, в процентах"
+                                                mode: "persistent"
 
                                         MDTextField:
                                             mode: "filled"
                                             size_hint_x: 0.58
-                                            hint_text: "Первоначальный взнос, ₽"
+                                            size_hint_y: None
+                                            height: dp(96)
                                             input_filter: "float"
+                                            MDTextFieldLeadingIcon:
+                                                icon: "wallet-outline"
+                                            MDTextFieldHintText:
+                                                text: "Первоначальный взнос, ₽"
+                                            MDTextFieldHelperText:
+                                                text: "Сумма взноса при оформлении"
+                                                mode: "persistent"
 
-                                    MDBoxLayout:
-                                        orientation: "horizontal"
-                                        spacing: dp(8)
+                                    MDTextField:
+                                        mode: "filled"
                                         size_hint_y: None
-                                        height: dp(72)
-
-                                        MDIconButton:
+                                        height: dp(96)
+                                        MDTextFieldLeadingIcon:
                                             icon: "credit-card-outline"
-                                            pos_hint: {"center_y": .5}
-
-                                        MDTextField:
-                                            mode: "filled"
-                                            size_hint_x: 1
-                                            hint_text: "Тип платежа (аннуитет / дифференцированный)"
+                                        MDTextFieldHintText:
+                                            text: "Тип платежа"
+                                        MDTextFieldHelperText:
+                                            text: "Аннуитет или дифференцированный график"
+                                            mode: "persistent"
 
                             MDBoxLayout:
                                 orientation: "vertical"
