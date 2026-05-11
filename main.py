@@ -63,8 +63,8 @@ MDScreen:
 
                                 MDBoxLayout:
                                     orientation: "vertical"
-                                    spacing: dp(8)
-                                    padding: dp(16), dp(16), dp(16), dp(24)
+                                    spacing: dp(12)
+                                    padding: dp(16)
                                     size_hint_y: None
                                     height: self.minimum_height
 
@@ -73,6 +73,7 @@ MDScreen:
                                         adaptive_height: True
                                         bold: True
 
+                                    # Like reference: stacked filled fields with hint only (no persistent helper).
                                     MDTextField:
                                         mode: "filled"
                                         size_hint_y: None
@@ -82,9 +83,6 @@ MDScreen:
                                             icon: "home-variant-outline"
                                         MDTextFieldHintText:
                                             text: "Стоимость недвижимости, ₽"
-                                        MDTextFieldHelperText:
-                                            text: "Оценочная или договорная цена объекта"
-                                            mode: "persistent"
 
                                     MDTextField:
                                         mode: "filled"
@@ -95,9 +93,6 @@ MDScreen:
                                             icon: "calendar"
                                         MDTextFieldHintText:
                                             text: "Срок кредита, лет"
-                                        MDTextFieldHelperText:
-                                            text: "Полных лет (например, 20)"
-                                            mode: "persistent"
 
                                     MDTextField:
                                         mode: "filled"
@@ -108,10 +103,18 @@ MDScreen:
                                             icon: "cash"
                                         MDTextFieldHintText:
                                             text: "Сумма кредита, ₽"
-                                        MDTextFieldHelperText:
-                                            text: "Цена минус взнос"
-                                            mode: "persistent"
 
+                                    MDTextField:
+                                        mode: "filled"
+                                        size_hint_y: None
+                                        height: self.minimum_height
+                                        input_filter: "float"
+                                        MDTextFieldLeadingIcon:
+                                            icon: "wallet-outline"
+                                        MDTextFieldHintText:
+                                            text: "Первоначальный взнос, ₽"
+
+                                    # Bottom row: icon on the left field only (same pattern as Interest / Payment type).
                                     MDBoxLayout:
                                         orientation: "horizontal"
                                         spacing: dp(8)
@@ -120,7 +123,7 @@ MDScreen:
 
                                         MDTextField:
                                             mode: "filled"
-                                            size_hint_x: 0.42
+                                            size_hint_x: 0.5
                                             size_hint_y: None
                                             height: self.minimum_height
                                             input_filter: "float"
@@ -128,35 +131,14 @@ MDScreen:
                                                 icon: "bank"
                                             MDTextFieldHintText:
                                                 text: "Ставка, % годовых"
-                                            MDTextFieldHelperText:
-                                                text: "Годовых, %"
-                                                mode: "persistent"
 
                                         MDTextField:
                                             mode: "filled"
-                                            size_hint_x: 0.58
+                                            size_hint_x: 0.5
                                             size_hint_y: None
                                             height: self.minimum_height
-                                            input_filter: "float"
-                                            MDTextFieldLeadingIcon:
-                                                icon: "wallet-outline"
                                             MDTextFieldHintText:
-                                                text: "Первоначальный взнос, ₽"
-                                            MDTextFieldHelperText:
-                                                text: "При оформлении"
-                                                mode: "persistent"
-
-                                    MDTextField:
-                                        mode: "filled"
-                                        size_hint_y: None
-                                        height: self.minimum_height
-                                        MDTextFieldLeadingIcon:
-                                            icon: "credit-card-outline"
-                                        MDTextFieldHintText:
-                                            text: "Тип платежа"
-                                        MDTextFieldHelperText:
-                                            text: "Аннуитет или дифференцированный"
-                                            mode: "persistent"
+                                                text: "Тип платежа"
 
                             MDBoxLayout:
                                 orientation: "vertical"
@@ -306,5 +288,5 @@ class MortgageCalculatorApp(MDApp):
             drawer.set_state("close")
         webbrowser.open(SOURCE_CODE_URL)
 
-
+    
 MortgageCalculatorApp().run()
