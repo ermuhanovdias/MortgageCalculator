@@ -1,8 +1,10 @@
 import calendar
+import random
 import webbrowser
 from datetime import date
 
 from kivy.clock import Clock
+from kivy.graphics import Color, Line, Rectangle
 from kivy.lang import Builder
 from kivy.metrics import dp
 
@@ -391,23 +393,63 @@ MDScreen:
 
                             MDBoxLayout:
                                 orientation: "vertical"
+                                spacing: dp(6)
+                                padding: dp(8)
                                 size_hint: 1, 1
 
-                                MDLabel:
-                                    text: "График — кривые и динамика (скоро)."
-                                    halign: "center"
-                                    valign: "middle"
+                                MDBoxLayout:
+                                    orientation: "vertical"
+                                    size_hint_y: None
+                                    height: self.minimum_height
+                                    padding: dp(6)
+                                    md_bg_color: 0.93, 0.94, 0.96, 1
+
+                                    MDLabel:
+                                        text: "График платежей"
+                                        halign: "center"
+                                        adaptive_height: True
+                                        bold: True
+
+                                MDBoxLayout:
+                                    orientation: "vertical"
+                                    spacing: dp(4)
+                                    padding: dp(6)
                                     size_hint: 1, 1
+                                    md_bg_color: 0.96, 0.97, 0.99, 1
+
+                                    Widget:
+                                        id: graph
+                                        size_hint: 1, 1
 
                             MDBoxLayout:
                                 orientation: "vertical"
+                                spacing: dp(6)
+                                padding: dp(8)
                                 size_hint: 1, 1
 
-                                MDLabel:
-                                    text: "Диаграммы — визуализация (скоро)."
-                                    halign: "center"
-                                    valign: "middle"
+                                MDBoxLayout:
+                                    orientation: "vertical"
+                                    size_hint_y: None
+                                    height: self.minimum_height
+                                    padding: dp(6)
+                                    md_bg_color: 0.93, 0.94, 0.96, 1
+
+                                    MDLabel:
+                                        text: "Совокупные выплаты"
+                                        halign: "center"
+                                        adaptive_height: True
+                                        bold: True
+
+                                MDBoxLayout:
+                                    orientation: "vertical"
+                                    spacing: dp(4)
+                                    padding: dp(6)
                                     size_hint: 1, 1
+                                    md_bg_color: 0.96, 0.97, 0.99, 1
+
+                                    Widget:
+                                        id: chart
+                                        size_hint: 1, 1
 
                             MDBoxLayout:
                                 orientation: "vertical"
@@ -503,6 +545,7 @@ MDScreen:
 
 class MortgageCalculatorApp(MDApp):
     payment_type_menu: MDDropdownMenu | None = None
+    _plot_canvas_bound: bool = False
 
     def build(self):
         # Reference UI: dark top bar + tabs, but white content area.
@@ -547,6 +590,57 @@ class MortgageCalculatorApp(MDApp):
         self._apply_default_form_values()
         # Lesson: run same calculation as the button so the screen shows numbers on launch.
         Clock.schedule_once(lambda _dt: self.calculate(), 0.15)
+        # Draw plot frames so Graph/Chart tabs are not blank before first interaction.
+        Clock.schedule_once(lambda _dt: self._prime_empty_plots(), 0.22)
+
+    def _prime_empty_plots(self) -> None:
+        self._ensure_plot_canvas_bindings()
+        self._draw_graph_background(self.root.ids.graph)
+        self._draw_graph_background(self.root.ids.chart)
+
+    def _ensure_plot_canvas_bindings(self) -> None:
+        """Bind graph/chart Widget once so canvas.before tracks size (lesson: draw_graph area)."""
+        if self._plot_canvas_bound:
+            return
+        self._plot_canvas_bound = True
+        for key in ("graph", "chart"):
+            w = self.root.ids[key]
+            w.bind(pos=self._on_plot_widget_layout, size=self._on_plot_widget_layout)
+        print("Plot canvas bindings attached (graph, chart)")
+
+    def _on_plot_widget_layout(self, instance, *args) -> None:
+        self._draw_graph_background(instance)
+
+    def _draw_graph_background(self, w) -> None:
+        """Fill plot area and draw border (Kivy graphics: Color, Rectangle, Line)."""
+        w.canvas.before.clear()
+        with w.canvas.before:
+            Color(0.92, 0.94, 0.98, 1)
+            Rectangle(pos=w.pos, size=w.size)
+            Color(0.45, 0.5, 0.58, 1)
+            Line(rectangle=(w.x, w.y, w.width, w.height), width=dp(1.5))
+
+    def show_canvas_stress(self, w, count: int = 20) -> None:
+        """Draw random small rectangles on canvas (Kivy stress-style demo; lesson: no clear here)."""
+        if w.width <= 1 or w.height <= 1:
+            return
+        side = dp(14)
+        margin = side + dp(4)
+        for _ in range(count):
+            x = w.x + random.uniform(0, max(w.width - margin, dp(1)))
+            y = w.y + random.uniform(0, max(w.height - margin, dp(1)))
+            with w.canvas:
+                Color(random.random(), random.random(), random.random(), 0.88)
+                Rectangle(pos=(x, y), size=(side, side))
+        print(f"Canvas stress: added {count} small rectangles")
+
+    def _refresh_plot_canvases(self) -> None:
+        """Redraw backgrounds then append stress squares (each calculate adds more squares)."""
+        self._ensure_plot_canvas_bindings()
+        for key in ("graph", "chart"):
+            w = self.root.ids[key]
+            self._draw_graph_background(w)
+            self.show_canvas_stress(w)
 
     def calculate(self, *args) -> None:
         """
@@ -563,6 +657,10 @@ class MortgageCalculatorApp(MDApp):
             annual = float((ids.field_rate.text or "0").replace(",", "."))
         except ValueError:
             ids.schedule_list.clear_widgets()
+            for key in ("graph", "chart"):
+                w = ids[key]
+                w.canvas.before.clear()
+                w.canvas.clear()
             ids.label_result_monthly.text = "Ошибка: проверьте числовые поля"
             ids.label_result_interest.text = "—"
             ids.label_result_total.text = "—"
@@ -580,6 +678,10 @@ class MortgageCalculatorApp(MDApp):
 
         if n_months <= 0 or principal <= 0:
             ids.schedule_list.clear_widgets()
+            for key in ("graph", "chart"):
+                w = ids[key]
+                w.canvas.before.clear()
+                w.canvas.clear()
             ids.label_result_monthly.text = "Платёж: —"
             ids.label_result_interest.text = "Переплата по процентам: —"
             ids.label_result_total.text = "Общая сумма выплат: —"
@@ -601,6 +703,8 @@ class MortgageCalculatorApp(MDApp):
         ids.label_result_effective.text = f"Эффективная ставка (год): {_fmt_pct(eff)}"
 
         self._rebuild_schedule_list(principal, annual, n_months, pay_type, start_d)
+
+        Clock.schedule_once(lambda _dt: self._refresh_plot_canvases(), 0.05)
 
         print(
             f"Calculate done: type={pay_type!r}, principal={principal}, months={n_months}, "
@@ -626,7 +730,7 @@ class MortgageCalculatorApp(MDApp):
             rows = _schedule_annuity_rows(principal, annual, n_months, base)
 
         header_bg = (0.86, 0.89, 0.93, 1.0)
-        header_texts = ("№", "Дата", "Платёж", "Проценты", "Тело", "Остаток")
+        header_texts = ("№", "Дата", "Платёж", "Проценты", "Основной", "Остаток")
         lst.add_widget(_schedule_table_row_widget(header_texts, header_bg, header=True))
 
         row_white = (1.0, 1.0, 1.0, 1.0)
