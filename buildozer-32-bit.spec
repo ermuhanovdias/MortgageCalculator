@@ -11,6 +11,8 @@ package.domain = org.mortgagecalculator
 
 source.dir = .
 
+source.main = main.py
+
 source.include_exts = py,png,jpg,kv,atlas,json
 
 source.include_patterns = data/*
