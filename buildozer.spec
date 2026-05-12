@@ -14,7 +14,7 @@ source.include_exts = py,png,jpg,kv,atlas,json
 
 source.include_patterns = data/*
 
-version = 0.9
+version = 1.2
 
 requirements = python3,kivy,kivymd,pillow
 

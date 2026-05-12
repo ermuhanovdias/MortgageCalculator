@@ -1,10 +1,9 @@
 import calendar
-import random
 import webbrowser
 from datetime import date
 
 from kivy.clock import Clock
-from kivy.graphics import Color, Line, Rectangle
+from kivy.graphics import Color, Ellipse, Line, Rectangle
 from kivy.lang import Builder
 from kivy.metrics import dp
 
@@ -177,6 +176,7 @@ def _schedule_table_row_widget(
 KV = """
 #:import Clock kivy.clock.Clock
 #:import dp kivy.metrics.dp
+#:import CheckBox kivy.uix.checkbox.CheckBox
 
 MDScreen:
     md_bg_color: self.theme_cls.backgroundColor
@@ -410,12 +410,56 @@ MDScreen:
                                         adaptive_height: True
                                         bold: True
 
+                                    MDLabel:
+                                        text: "Столбцы: проценты (красный) и тело платежа (синий) по месяцам"
+                                        halign: "center"
+                                        adaptive_height: True
+                                        font_style: "Body"
+                                        role: "small"
+                                        theme_text_color: "Secondary"
+
+                                MDBoxLayout:
+                                    orientation: "horizontal"
+                                    spacing: dp(16)
+                                    padding: dp(8), dp(4)
+                                    size_hint_y: None
+                                    height: dp(40)
+                                    md_bg_color: 0.94, 0.95, 0.97, 1
+
+                                    MDBoxLayout:
+                                        orientation: "horizontal"
+                                        spacing: dp(4)
+                                        size_hint_x: 0.5
+                                        CheckBox:
+                                            id: graph_cb_interest
+                                            size_hint: None, None
+                                            size: dp(32), dp(32)
+                                            active: True
+                                            on_active: app.redraw_charts_only()
+                                        MDLabel:
+                                            text: "Проценты"
+                                            valign: "middle"
+
+                                    MDBoxLayout:
+                                        orientation: "horizontal"
+                                        spacing: dp(4)
+                                        size_hint_x: 0.5
+                                        CheckBox:
+                                            id: graph_cb_principal
+                                            size_hint: None, None
+                                            size: dp(32), dp(32)
+                                            active: True
+                                            on_active: app.redraw_charts_only()
+                                        MDLabel:
+                                            text: "Тело"
+                                            valign: "middle"
+
                                 MDBoxLayout:
                                     orientation: "vertical"
                                     spacing: dp(4)
                                     padding: dp(6)
                                     size_hint: 1, 1
-                                    md_bg_color: 0.96, 0.97, 0.99, 1
+                                    md_bg_color: 0.98, 0.99, 1.0, 1
 
                                     Widget:
                                         id: graph
@@ -440,12 +484,56 @@ MDScreen:
                                         adaptive_height: True
                                         bold: True
 
+                                    MDLabel:
+                                        text: "Круговая диаграмма: доля процентов и тела в общей сумме выплат"
+                                        halign: "center"
+                                        adaptive_height: True
+                                        font_style: "Body"
+                                        role: "small"
+                                        theme_text_color: "Secondary"
+
+                                MDBoxLayout:
+                                    orientation: "horizontal"
+                                    spacing: dp(16)
+                                    padding: dp(8), dp(4)
+                                    size_hint_y: None
+                                    height: dp(40)
+                                    md_bg_color: 0.94, 0.95, 0.97, 1
+
+                                    MDBoxLayout:
+                                        orientation: "horizontal"
+                                        spacing: dp(4)
+                                        size_hint_x: 0.5
+                                        CheckBox:
+                                            id: chart_cb_interest
+                                            size_hint: None, None
+                                            size: dp(32), dp(32)
+                                            active: True
+                                            on_active: app.redraw_charts_only()
+                                        MDLabel:
+                                            text: "Проценты"
+                                            valign: "middle"
+
+                                    MDBoxLayout:
+                                        orientation: "horizontal"
+                                        spacing: dp(4)
+                                        size_hint_x: 0.5
+                                        CheckBox:
+                                            id: chart_cb_principal
+                                            size_hint: None, None
+                                            size: dp(32), dp(32)
+                                            active: True
+                                            on_active: app.redraw_charts_only()
+                                        MDLabel:
+                                            text: "Тело"
+                                            valign: "middle"
+
                                 MDBoxLayout:
                                     orientation: "vertical"
                                     spacing: dp(4)
                                     padding: dp(6)
                                     size_hint: 1, 1
-                                    md_bg_color: 0.96, 0.97, 0.99, 1
+                                    md_bg_color: 0.98, 0.99, 1.0, 1
 
                                     Widget:
                                         id: chart
@@ -546,6 +634,7 @@ MDScreen:
 class MortgageCalculatorApp(MDApp):
     payment_type_menu: MDDropdownMenu | None = None
     _plot_canvas_bound: bool = False
+    _last_schedule_rows: list | None = None
 
     def build(self):
         # Reference UI: dark top bar + tabs, but white content area.
@@ -609,7 +698,12 @@ class MortgageCalculatorApp(MDApp):
         print("Plot canvas bindings attached (graph, chart)")
 
     def _on_plot_widget_layout(self, instance, *args) -> None:
-        self._draw_graph_background(instance)
+        """Resize: redraw plot frame + chart layers (lesson: graph rebuild on layout)."""
+        self._draw_graph_background(self.root.ids.graph)
+        self._draw_graph_background(self.root.ids.chart)
+        if self._last_schedule_rows:
+            self._draw_graph_bars(self.root.ids.graph, self._last_schedule_rows)
+            self._draw_pie_chart(self.root.ids.chart, self._last_schedule_rows)
 
     def _draw_graph_background(self, w) -> None:
         """Fill plot area and draw border (Kivy graphics: Color, Rectangle, Line)."""
@@ -620,27 +714,87 @@ class MortgageCalculatorApp(MDApp):
             Color(0.45, 0.5, 0.58, 1)
             Line(rectangle=(w.x, w.y, w.width, w.height), width=dp(1.5))
 
-    def show_canvas_stress(self, w, count: int = 20) -> None:
-        """Draw random small rectangles on canvas (Kivy stress-style demo; lesson: no clear here)."""
-        if w.width <= 1 or w.height <= 1:
-            return
-        side = dp(14)
-        margin = side + dp(4)
-        for _ in range(count):
-            x = w.x + random.uniform(0, max(w.width - margin, dp(1)))
-            y = w.y + random.uniform(0, max(w.height - margin, dp(1)))
-            with w.canvas:
-                Color(random.random(), random.random(), random.random(), 0.88)
-                Rectangle(pos=(x, y), size=(side, side))
-        print(f"Canvas stress: added {count} small rectangles")
+    def redraw_charts_only(self, *args) -> None:
+        """Checkbox toggled: repaint bars and pie from cached schedule (no full recalculate)."""
+        Clock.schedule_once(lambda _dt: self._paint_both_charts_once(), 0.02)
 
-    def _refresh_plot_canvases(self) -> None:
-        """Redraw backgrounds then append stress squares (each calculate adds more squares)."""
-        self._ensure_plot_canvas_bindings()
-        for key in ("graph", "chart"):
-            w = self.root.ids[key]
-            self._draw_graph_background(w)
-            self.show_canvas_stress(w)
+    def _paint_both_charts_once(self) -> None:
+        if not getattr(self, "root", None):
+            return
+        g = self.root.ids.graph
+        c = self.root.ids.chart
+        self._draw_graph_background(g)
+        self._draw_graph_background(c)
+        if self._last_schedule_rows:
+            self._draw_graph_bars(g, self._last_schedule_rows)
+            self._draw_pie_chart(c, self._last_schedule_rows)
+
+    def _draw_graph_bars(self, w, rows: list) -> None:
+        """Stacked bar chart: blue = principal part, red = interest (lesson-style loop on canvas)."""
+        w.canvas.clear()
+        if not rows or w.width < dp(24):
+            return
+        ids = self.root.ids
+        show_i = ids.graph_cb_interest.active
+        show_p = ids.graph_cb_principal.active
+        pad = dp(14)
+        max_stack = max((r[3] + r[4]) for r in rows) or 1.0
+        plot_h = max(w.height - 2 * pad, dp(1))
+        plot_w = max(w.width - 2 * pad, dp(1))
+        n = len(rows)
+        gap = dp(1.5)
+        bar_w = max((plot_w - gap * max(n - 1, 0)) / max(n, 1), dp(2))
+        base_x = w.x + pad
+        base_y = w.y + pad
+        with w.canvas:
+            for i, row in enumerate(rows):
+                intr, prin = row[3], row[4]
+                bh_p = plot_h * (prin / max_stack) if show_p else 0.0
+                bh_i = plot_h * (intr / max_stack) if show_i else 0.0
+                bx = base_x + i * (bar_w + gap)
+                y0 = base_y
+                if show_p and bh_p > 0:
+                    Color(0.15, 0.35, 0.92, 1)
+                    Rectangle(pos=(bx, y0), size=(bar_w, bh_p))
+                    y0 += bh_p
+                if show_i and bh_i > 0:
+                    Color(0.92, 0.18, 0.2, 1)
+                    Rectangle(pos=(bx, y0), size=(bar_w, bh_i))
+
+    def _draw_pie_chart(self, w, rows: list) -> None:
+        """Two-sector pie: total interest vs total principal paid (Ellipse, angle_start / angle_end)."""
+        w.canvas.clear()
+        if not rows or w.width < dp(24):
+            return
+        ids = self.root.ids
+        show_i = ids.chart_cb_interest.active
+        show_p = ids.chart_cb_principal.active
+        t_int = sum(r[3] for r in rows) if show_i else 0.0
+        t_prin = sum(r[4] for r in rows) if show_p else 0.0
+        total = t_int + t_prin
+        if total <= 1e-9:
+            return
+        cx = w.center_x
+        cy = w.center_y
+        rad = 0.38 * min(w.width, w.height)
+        a_int = 360.0 * (t_int / total)
+        with w.canvas:
+            if t_int > 1e-6 and show_i:
+                Color(0.92, 0.2, 0.22, 1)
+                Ellipse(
+                    pos=(cx - rad, cy - rad),
+                    size=(2 * rad, 2 * rad),
+                    angle_start=0.0,
+                    angle_end=a_int,
+                )
+            if t_prin > 1e-6 and show_p:
+                Color(0.18, 0.42, 0.88, 1)
+                Ellipse(
+                    pos=(cx - rad, cy - rad),
+                    size=(2 * rad, 2 * rad),
+                    angle_start=a_int,
+                    angle_end=360.0,
+                )
 
     def calculate(self, *args) -> None:
         """
@@ -656,6 +810,7 @@ class MortgageCalculatorApp(MDApp):
             n_months = max(0, int(round(years_f * 12)))
             annual = float((ids.field_rate.text or "0").replace(",", "."))
         except ValueError:
+            self._last_schedule_rows = None
             ids.schedule_list.clear_widgets()
             for key in ("graph", "chart"):
                 w = ids[key]
@@ -677,6 +832,7 @@ class MortgageCalculatorApp(MDApp):
         eff = _effective_annual_percent(annual)
 
         if n_months <= 0 or principal <= 0:
+            self._last_schedule_rows = None
             ids.schedule_list.clear_widgets()
             for key in ("graph", "chart"):
                 w = ids[key]
@@ -704,7 +860,7 @@ class MortgageCalculatorApp(MDApp):
 
         self._rebuild_schedule_list(principal, annual, n_months, pay_type, start_d)
 
-        Clock.schedule_once(lambda _dt: self._refresh_plot_canvases(), 0.05)
+        Clock.schedule_once(lambda _dt: self._paint_both_charts_once(), 0.05)
 
         print(
             f"Calculate done: type={pay_type!r}, principal={principal}, months={n_months}, "
@@ -748,6 +904,7 @@ class MortgageCalculatorApp(MDApp):
             )
             lst.add_widget(_schedule_table_row_widget(texts, bg))
 
+        self._last_schedule_rows = rows
         print(f"Payment table rebuilt: {len(rows)} data rows")
 
     def _apply_default_form_values(self) -> None:
