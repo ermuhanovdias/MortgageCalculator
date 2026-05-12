@@ -37,21 +37,33 @@ MDScreen:
 
                         MDTabsItem:
                             MDTabsItemIcon:
-                                icon: "calculator"
+                                icon: "view-grid-outline"
                             MDTabsItemText:
-                                text: "Ипотека"
+                                text: "Input"
+
+                        MDTabsItem:
+                            MDTabsItemIcon:
+                                icon: "table"
+                            MDTabsItemText:
+                                text: "Table"
 
                         MDTabsItem:
                             MDTabsItemIcon:
                                 icon: "chart-line"
                             MDTabsItemText:
-                                text: "Графики"
+                                text: "Graph"
 
                         MDTabsItem:
                             MDTabsItemIcon:
-                                icon: "information-outline"
+                                icon: "chart-pie"
                             MDTabsItemText:
-                                text: "Инфо"
+                                text: "Chart"
+
+                        MDTabsItem:
+                            MDTabsItemIcon:
+                                icon: "book-open-variant"
+                            MDTabsItemText:
+                                text: "Sum"
 
                         MDDivider:
 
@@ -149,7 +161,7 @@ MDScreen:
                                 size_hint: 1, 1
 
                                 MDLabel:
-                                    text: "Раздел «Графики» — контент позже."
+                                    text: "Таблица — график платежей (скоро)."
                                     halign: "center"
                                     valign: "middle"
                                     size_hint: 1, 1
@@ -159,7 +171,27 @@ MDScreen:
                                 size_hint: 1, 1
 
                                 MDLabel:
-                                    text: "Раздел «Инфо» — кратко о приложении. Исходный код: меню слева → «Исходный код»."
+                                    text: "График — кривые и динамика (скоро)."
+                                    halign: "center"
+                                    valign: "middle"
+                                    size_hint: 1, 1
+
+                            MDBoxLayout:
+                                orientation: "vertical"
+                                size_hint: 1, 1
+
+                                MDLabel:
+                                    text: "Диаграммы — визуализация (скоро)."
+                                    halign: "center"
+                                    valign: "middle"
+                                    size_hint: 1, 1
+
+                            MDBoxLayout:
+                                orientation: "vertical"
+                                size_hint: 1, 1
+
+                                MDLabel:
+                                    text: "Итоги — сводка по кредиту (скоро)."
                                     halign: "center"
                                     valign: "middle"
                                     size_hint: 1, 1
@@ -237,7 +269,7 @@ MDScreen:
                     on_release: root.ids.nav_drawer.set_state("toggle")
 
             MDTopAppBarTitle:
-                text: "Калькулятор ипотеки"
+                text: "Mortgage Calculator"
 
             MDTopAppBarTrailingButtonContainer:
                 MDActionTopAppBarButton:
@@ -286,7 +318,7 @@ class MortgageCalculatorApp(MDApp):
         # Content area below tabs.
         carousel.md_bg_color = "#FFFFFF"
 
-        tabs.switch_tab(icon="calculator")
+        tabs.switch_tab(icon="view-grid-outline")
 
         self._setup_payment_type_dropdown()
 
