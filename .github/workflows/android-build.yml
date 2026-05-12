@@ -60,29 +60,35 @@ jobs:
           python -m pip install --upgrade pip
           pip install "cython<3.1" buildozer
 
+      # Use `python -m buildozer` so CI never depends on PATH to a `buildozer` script (fixes instant step failure).
+      - name: Verify Buildozer
+        run: |
+          python -m buildozer --version
+
       - name: Prepare output folder for both APKs
         run: mkdir -p release-apks
 
       - name: Build debug APK — 32-bit (armeabi-v7a)
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           echo "=== Compile 32-bit (armeabi-v7a) ==="
           ls -la
           rm -rf .buildozer
           cp -f buildozer-32-bit.spec buildozer.spec
-          buildozer --version
-          buildozer android debug
+          python -m buildozer android debug
           ls -la bin/
           cp -f bin/*.apk release-apks/
 
       - name: Build debug APK — 64-bit (arm64-v8a)
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           echo "=== Compile 64-bit (arm64-v8a) ==="
           ls -la
           rm -rf .buildozer
           cp -f buildozer-64-bit.spec buildozer.spec
-          buildozer android debug
+          python -m buildozer android debug
           ls -la bin/
           cp -f bin/*.apk release-apks/
           ls -la release-apks/
