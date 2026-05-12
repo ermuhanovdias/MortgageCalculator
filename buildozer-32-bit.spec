@@ -26,7 +26,8 @@ presplash.filename = %(source.dir)s/data/logo/presplash_512_kivy_min.png
 # Optional menu / notification artwork (not wired to manifest yet)
 # android.add_resources = ...
 
-orientation = all
+orientation = portrait
+android.manifest.orientation = fullSensor
 
 osx.kivy_version = 2.3.0
 

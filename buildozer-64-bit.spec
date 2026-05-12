@@ -22,7 +22,8 @@ icon.filename = %(source.dir)s/data/logo/logo_512_min.png
 
 presplash.filename = %(source.dir)s/data/logo/presplash_512_kivy_min.png
 
-orientation = all
+orientation = portrait
+android.manifest.orientation = fullSensor
 
 osx.kivy_version = 2.3.0
 
