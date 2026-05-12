@@ -1,9 +1,14 @@
+import calendar
 import webbrowser
 from datetime import date
+
 from kivy.clock import Clock
 from kivy.lang import Builder
+from kivy.metrics import dp
 
 from kivymd.app import MDApp
+from kivymd.uix.boxlayout import MDBoxLayout
+from kivymd.uix.label import MDLabel
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.pickers import MDModalDatePicker
 from kivymd.uix.tab import MDTabsItemText, MDTabsPrimary
@@ -65,6 +70,14 @@ def _totals_annuity(principal: float, annual_percent: float, n_months: int) -> t
     return monthly, max(0.0, total_paid - principal), total_paid
 
 
+def add_calendar_months(origin: date, months: int) -> date:
+    """Add calendar months with day clamped to last day of month (lesson-style next-month stepping)."""
+    y = origin.year + (origin.month - 1 + months) // 12
+    m = (origin.month - 1 + months) % 12 + 1
+    d = min(origin.day, calendar.monthrange(y, m)[1])
+    return date(y, m, d)
+
+
 def _totals_differentiated(principal: float, annual_percent: float, n_months: int) -> tuple[float, float, float, float]:
     """
     Returns (first_month_payment, last_month_payment, total_interest, total_paid).
@@ -88,6 +101,74 @@ def _totals_differentiated(principal: float, annual_percent: float, n_months: in
             first_pay = pay
         last_pay = pay
     return first_pay, last_pay, total_interest, total_paid
+
+
+def _schedule_annuity_rows(
+    principal: float, annual_percent: float, n_months: int, start: date
+) -> list[tuple[int, date, float, float, float, float]]:
+    """Each row: month_no, pay_date, payment, interest, principal_part, balance_after."""
+    i = _monthly_rate_percent(annual_percent)
+    monthly = _annuity_monthly_payment(principal, annual_percent, n_months)
+    balance = principal
+    rows: list[tuple[int, date, float, float, float, float]] = []
+    for month_no in range(1, n_months + 1):
+        pay_date = add_calendar_months(start, month_no - 1)
+        interest = balance * i
+        if month_no == n_months:
+            principal_part = balance
+            payment = principal_part + interest
+        else:
+            payment = monthly
+            principal_part = payment - interest
+        balance -= principal_part
+        rows.append((month_no, pay_date, payment, interest, principal_part, max(balance, 0.0)))
+    return rows
+
+
+def _schedule_differentiated_rows(
+    principal: float, annual_percent: float, n_months: int, start: date
+) -> list[tuple[int, date, float, float, float, float]]:
+    i = _monthly_rate_percent(annual_percent)
+    principal_part = principal / n_months
+    balance = principal
+    rows: list[tuple[int, date, float, float, float, float]] = []
+    for month_no in range(1, n_months + 1):
+        pay_date = add_calendar_months(start, month_no - 1)
+        interest = balance * i
+        payment = principal_part + interest
+        balance -= principal_part
+        rows.append((month_no, pay_date, payment, interest, principal_part, max(balance, 0.0)))
+    return rows
+
+
+def _schedule_table_row_widget(
+    texts: tuple[str, str, str, str, str, str],
+    row_bg: tuple[float, float, float, float],
+    header: bool = False,
+) -> MDBoxLayout:
+    """One horizontal row for MDList (lesson: several labels in one line)."""
+    widths = (0.1, 0.18, 0.2, 0.18, 0.17, 0.17)
+    row = MDBoxLayout(
+        orientation="horizontal",
+        size_hint_y=None,
+        height=dp(40),
+        spacing=dp(2),
+        padding=(dp(4), 0),
+        md_bg_color=row_bg,
+    )
+    for text, w in zip(texts, widths):
+        row.add_widget(
+            MDLabel(
+                text=text,
+                bold=header,
+                halign="center",
+                valign="middle",
+                size_hint_x=w,
+                shorten=True,
+                shorten_from="right",
+            )
+        )
+    return row
 
 
 # Tabs + first-tab form live in KV below (lesson: declarative UI, no programmatic tab loop).
@@ -289,13 +370,24 @@ MDScreen:
 
                             MDBoxLayout:
                                 orientation: "vertical"
+                                spacing: dp(8)
+                                padding: dp(12)
                                 size_hint: 1, 1
 
                                 MDLabel:
-                                    text: "Таблица — график платежей (скоро)."
-                                    halign: "center"
-                                    valign: "middle"
+                                    text: "Таблица — график платежей"
+                                    adaptive_height: True
+                                    bold: True
+
+                                MDScrollView:
+                                    do_scroll_x: False
+                                    bar_width: dp(6)
                                     size_hint: 1, 1
+
+                                    MDList:
+                                        id: schedule_list
+                                        size_hint_y: None
+                                        height: self.minimum_height
 
                             MDBoxLayout:
                                 orientation: "vertical"
@@ -470,6 +562,7 @@ class MortgageCalculatorApp(MDApp):
             n_months = max(0, int(round(years_f * 12)))
             annual = float((ids.field_rate.text or "0").replace(",", "."))
         except ValueError:
+            ids.schedule_list.clear_widgets()
             ids.label_result_monthly.text = "Ошибка: проверьте числовые поля"
             ids.label_result_interest.text = "—"
             ids.label_result_total.text = "—"
@@ -486,6 +579,7 @@ class MortgageCalculatorApp(MDApp):
         eff = _effective_annual_percent(annual)
 
         if n_months <= 0 or principal <= 0:
+            ids.schedule_list.clear_widgets()
             ids.label_result_monthly.text = "Платёж: —"
             ids.label_result_interest.text = "Переплата по процентам: —"
             ids.label_result_total.text = "Общая сумма выплат: —"
@@ -506,10 +600,51 @@ class MortgageCalculatorApp(MDApp):
         ids.label_result_total.text = f"Общая сумма выплат: {_fmt_rub(total)}"
         ids.label_result_effective.text = f"Эффективная ставка (год): {_fmt_pct(eff)}"
 
+        self._rebuild_schedule_list(principal, annual, n_months, pay_type, start_d)
+
         print(
             f"Calculate done: type={pay_type!r}, principal={principal}, months={n_months}, "
             f"interest={interest:.2f}, total={total:.2f}"
         )
+
+    def _rebuild_schedule_list(
+        self,
+        principal: float,
+        annual: float,
+        n_months: int,
+        pay_type: str,
+        start_d: date | None,
+    ) -> None:
+        """Fill MDList on Table tab: header + one row per month (lesson: zebra striping)."""
+        lst = self.root.ids.schedule_list
+        lst.clear_widgets()
+
+        base = start_d or date.today()
+        if pay_type == "Дифференцированный":
+            rows = _schedule_differentiated_rows(principal, annual, n_months, base)
+        else:
+            rows = _schedule_annuity_rows(principal, annual, n_months, base)
+
+        header_bg = (0.86, 0.89, 0.93, 1.0)
+        header_texts = ("№", "Дата", "Платёж", "Проценты", "Тело", "Остаток")
+        lst.add_widget(_schedule_table_row_widget(header_texts, header_bg, header=True))
+
+        row_white = (1.0, 1.0, 1.0, 1.0)
+        row_gray = (0.9, 0.91, 0.94, 1.0)
+
+        for month_no, pay_date, payment, interest, principal_part, balance_after in rows:
+            bg = row_white if month_no % 2 == 1 else row_gray
+            texts = (
+                str(month_no),
+                pay_date.strftime("%d.%m.%Y"),
+                _fmt_rub(payment),
+                _fmt_rub(interest),
+                _fmt_rub(principal_part),
+                _fmt_rub(balance_after),
+            )
+            lst.add_widget(_schedule_table_row_widget(texts, bg))
+
+        print(f"Payment table rebuilt: {len(rows)} data rows")
 
     def _apply_default_form_values(self) -> None:
         """Lesson defaults: sample loan params + today's date in the start date field."""
