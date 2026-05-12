@@ -28,6 +28,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Lesson (Travis parity): trivial successful step so the workflow run shows an early green check.
+      - name: Echo OK
+        run: echo OK
+
       - name: Free disk space (Android SDK/NDK are large)
         uses: jlumbroso/free-disk-space@v1.3.1
         with:

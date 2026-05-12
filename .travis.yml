@@ -43,6 +43,8 @@ before_script:
   - mkdir -p release-apks
 
 script:
+  # Lesson: explicit successful command early so the job shows a green check / exit 0 heartbeat.
+  - echo OK
   - echo "=== Compile 32-bit (armeabi-v7a) ==="
   - ls -la
   - rm -rf .buildozer
@@ -62,7 +64,7 @@ script:
 before_deploy:
   - ls -la release-apks/
 
-# Buildozer [app] version (APK name suffix): 0.6 — bump together with buildozer-32-bit.spec / buildozer-64-bit.spec
+# Buildozer [app] version (APK name suffix): 1.3 — bump together with buildozer-32-bit.spec / buildozer-64-bit.spec
 deploy:
   provider: releases
   token: $GITHUB_TOKEN
